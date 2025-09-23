@@ -35,7 +35,7 @@ app.post('/login', async (req, res) => {
         }
         const accessToken = jwt.sign({ email: user.email, password: user.password }, JWT_SECRET, { expiresIn: '15m' });
         const refreshToken = jwt.sign({ email: user.email, password: user.password }, REFRESH_TOKEN_SECRET, { expiresIn: '1h' });
-        res.json({ "token": accessToken, "refreshToken": refreshToken });
+        res.status(200).json({ "token": accessToken, "refreshToken": refreshToken });
     } catch (err) {
         res.status(500).json({ error: 'Internal server error' });
     }
@@ -75,7 +75,7 @@ app.post('/register', async (req, res) => {
     }
 });
 
-app.post('/todos', async (req, res) => {
+app.post('/todo', async (req, res) => {
     const { title, description } = req.body;
     const { authorization } = req.headers;
     if(authorization && authorization.startsWith('Bearer ')){
@@ -106,7 +106,7 @@ app.post('/todos', async (req, res) => {
     }
 });
 
-app.post('/todos/:id', async (req, res) => {
+app.put('/todo/:id', async (req, res) => {
     const { id } = req.params;
     const { title, description } = req.body;
     const { authorization } = req.headers;
@@ -127,11 +127,9 @@ app.post('/todos/:id', async (req, res) => {
                 if (!title || !description) {
                     return res.status(400).json({ error: 'Missing Details' });
                 }
+                console.log("PRINT->>>>>> "+title, description, id, userid);
                 const result = await sql`UPDATE todos SET title = ${title}, description = ${description} WHERE taskid = ${id} AND userid = ${userid} RETURNING title, description`;
-                    return res.status(404).json({
-                        "title": result[0].title,
-                        "description": result[0].description
-                    });
+                    return res.status(200).json(result[0]);
             }
             return res.status(403).json({ error: 'Unauthorized' });
         } catch(err) {
@@ -237,6 +235,8 @@ app.get('/todos', async (req, res) => {
         return res.status(401).json({ error: 'Unauthorized' });
     }
 });
+
+export default app;
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
